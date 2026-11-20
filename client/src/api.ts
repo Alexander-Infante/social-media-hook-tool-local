@@ -22,8 +22,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 
 export const api = {
   status: () => request<Status>('GET', '/status'),
-  terms: () => request<{ version: string; text: string }>('GET', '/terms'),
-  acceptTerms: (version: string) => request('POST', '/terms/accept', { version }),
+  terms: () => request<{ text: string }>('GET', '/terms'),
   testConnector: (connectorId: string) => request<TestResult>('POST', '/connectors/test', { connectorId }),
 
   setup: () => request<SavedSettings>('GET', '/setup'),

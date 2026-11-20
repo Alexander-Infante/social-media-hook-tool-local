@@ -136,8 +136,3 @@ export async function deleteVideo(id: string) {
   return existed;
 }
 
-// ---- terms ------------------------------------------------------------------
-
-const termsPath = join(DATA_DIR, 'terms-accepted.json');
-export const getTermsAcceptance = () => readJson<{ version: string; acceptedAt: string }>(termsPath);
-export const acceptTerms = (version: string) => writeJson(termsPath, { version, acceptedAt: new Date().toISOString() });

@@ -137,6 +137,6 @@ npm run typecheck
 
 ## License and terms
 
-Free and open source under the [MIT License](LICENSE). By using HookLab you agree to the [Terms of Use and License Agreement](TERMS.md), which the app asks you to accept on first launch. HookLab is provided as-is, with no warranty and no liability for the authors. You are responsible for your API usage and costs, and for following the terms of TikTok, Instagram and any content you analyze.
+Free and open source under the [MIT License](LICENSE). By using HookLab you agree to the [Terms of Use and License Agreement](TERMS.md), which you can also read from the **Terms** link in the app. HookLab is provided as-is, with no warranty and no liability for the authors. You are responsible for your API usage and costs, and for following the terms of TikTok, Instagram and any content you analyze.
 
 HookLab is not affiliated with or endorsed by TikTok, Instagram, Meta, Anthropic, OpenAI, Google or Groq.

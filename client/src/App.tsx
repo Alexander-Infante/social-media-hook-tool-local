@@ -39,7 +39,6 @@ export function App() {
 
   if (error) return <div className="center-screen error-text">Couldn't reach the HookLab server: {error}</div>;
   if (!status) return <div className="center-screen muted">Loading…</div>;
-  if (!status.termsAccepted) return <Terms gate onAccepted={refreshStatus} />;
   if (status.connectors.length === 0) return <FirstRunSetup onDone={refreshStatus} />;
   return <Shell status={status} onStatusChanged={refreshStatus} />;
 }

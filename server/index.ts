@@ -4,7 +4,7 @@
  * to go directly to the LLM / transcription provider you configured.
  */
 import { spawn } from 'node:child_process';
-import { createHash, randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { createWriteStream, existsSync, readFileSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { createServer } from 'node:http';
@@ -38,7 +38,6 @@ const UPLOAD_TYPES: Record<string, string> = { 'video/mp4': 'mp4', 'video/quickt
 const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1']);
 
 const TERMS_TEXT = readFileSync(join(ROOT, 'TERMS.md'), 'utf8');
-const TERMS_VERSION = createHash('sha256').update(TERMS_TEXT).digest('hex').slice(0, 12);
 
 class HttpError extends Error {
   constructor(
@@ -84,14 +83,6 @@ app.use((req, res, next) => {
 const api = express.Router();
 api.use(express.json({ limit: '100kb' }));
 
-// Use of the app requires accepting the terms once; the acceptance is stored in data/terms-accepted.json.
-api.use(async (req, _res, next) => {
-  if (req.path === '/status' || req.path === '/terms' || req.path === '/terms/accept') return next();
-  const accepted = await store.getTermsAcceptance();
-  if (accepted?.version !== TERMS_VERSION) return next(new HttpError(403, 'Accept the Terms of Use to continue.'));
-  next();
-});
-
 const wrap =
   (fn: (req: Request) => Promise<unknown>) =>
   (req: Request, res: Response, next: NextFunction) =>
@@ -130,7 +121,6 @@ api.get(
   '/status',
   wrap(async () => {
     const tools = await toolVersions();
-    const accepted = await store.getTermsAcceptance();
     return {
       connectors,
       defaultConnectorId: defaultConnector()?.id,
@@ -142,23 +132,13 @@ api.get(
       },
       tools: { ...tools, ytdlpInstalling: ytdlpState.installing, ytdlpError: ytdlpState.error, hints: INSTALL_HINTS },
       dataDir: store.dirs.chats.replace(/[/\\]chats$/, ''),
-      termsAccepted: accepted?.version === TERMS_VERSION,
     };
   }),
 );
 
 api.get('/terms', (_req, res) => {
-  res.json({ version: TERMS_VERSION, text: TERMS_TEXT });
+  res.json({ text: TERMS_TEXT });
 });
-
-api.post(
-  '/terms/accept',
-  wrap(async (req) => {
-    if (req.body?.version !== TERMS_VERSION) throw new HttpError(409, 'The terms changed. Reload the page.');
-    await store.acceptTerms(TERMS_VERSION);
-    return { ok: true };
-  }),
-);
 
 api.post(
   '/connectors/test',
@@ -485,7 +465,7 @@ server.on('error', async (err: NodeJS.ErrnoException) => {
   // Most likely HookLab is already running (e.g. the launcher was double-clicked twice): just show it.
   const running = await fetch(`http://127.0.0.1:${PORT}/api/status`)
     .then((r) => r.json())
-    .then((s) => 'termsAccepted' in s)
+    .then((s) => 'connectors' in s && 'transcription' in s)
     .catch(() => false);
   if (running) {
     console.log(`\n  HookLab is already running at ${URL_}. Opening it in your browser.\n`);

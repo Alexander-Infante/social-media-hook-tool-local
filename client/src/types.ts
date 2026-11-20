@@ -21,7 +21,6 @@ export interface Status {
     hints: { ytdlp: string; ffmpeg: string };
   };
   dataDir: string;
-  termsAccepted: boolean;
 }
 
 export type KeyProvider = 'anthropic' | 'openai' | 'gemini' | 'groq';

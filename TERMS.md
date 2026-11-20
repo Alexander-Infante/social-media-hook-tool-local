@@ -56,7 +56,7 @@ We have no obligation to provide support, maintenance, updates or fixes. Platfor
 
 ## 9. Changes and termination
 
-We may update these terms in new versions of the Software; the Software will ask you to accept updated terms before you continue using it. Your rights under these terms end automatically if you breach them. Sections 3 through 9 survive termination.
+We may update these terms in new versions of the Software; using a new version means you accept the terms included with it. Your rights under these terms end automatically if you breach them. Sections 3 through 9 survive termination.
 
 ## 10. Entire agreement
 
