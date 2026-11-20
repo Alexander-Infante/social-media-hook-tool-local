@@ -59,6 +59,7 @@ export interface Message {
   videoIds?: string[];
   progress?: string;
   connectorLabel?: string;
+  steps?: { id: string; title: string; content: string }[];
 }
 
 export interface VideoSummary {

@@ -30,6 +30,14 @@ export interface Message {
   videoIds?: string[];
   progress?: string;
   connectorLabel?: string;
+  /** The deep analysis's intermediate steps, shown under the breakdown. */
+  steps?: AnalysisStep[];
+}
+
+export interface AnalysisStep {
+  id: string;
+  title: string;
+  content: string;
 }
 
 export interface VideoMeta {

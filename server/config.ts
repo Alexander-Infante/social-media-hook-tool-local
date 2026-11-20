@@ -145,6 +145,14 @@ export function transcriberChain(): TranscriberName[] {
   return chain;
 }
 
+// ---- Analysis -----------------------------------------------------------------
+
+/**
+ * deep (default): a newly shared video goes through the step-by-step analysis graph (analysis/graph.ts),
+ * about 8 model calls. quick: one model call, cheaper and faster, especially with local models.
+ */
+export const analysisMode = (): 'deep' | 'quick' => (env('ANALYSIS')?.toLowerCase() === 'quick' ? 'quick' : 'deep');
+
 // ---- Tools ------------------------------------------------------------------
 
 function bundledFfmpeg(): string | undefined {

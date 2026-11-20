@@ -269,6 +269,19 @@ function MessageBubble({
           <div className="markdown">
             <Markdown remarkPlugins={[remarkGfm]}>{m.content}</Markdown>
           </div>
+          {m.steps && m.steps.length > 0 && (
+            <details className="analysis-steps">
+              <summary className="small muted">Step-by-step analysis ({m.steps.length} steps)</summary>
+              {m.steps.map((step) => (
+                <details key={step.id} className="analysis-step">
+                  <summary className="small">{step.title}</summary>
+                  <div className="markdown small">
+                    <Markdown remarkPlugins={[remarkGfm]}>{step.content}</Markdown>
+                  </div>
+                </details>
+              ))}
+            </details>
+          )}
           <div className="msg-meta">
             {m.connectorLabel && <span>{m.connectorLabel}</span>}
             <button className="link tiny" onClick={() => navigator.clipboard.writeText(m.content)}>

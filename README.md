@@ -71,6 +71,19 @@ Everything you set up in the app is saved in `data/settings.json` inside the Hoo
 
 Power users can also use a `.env` file (copy `.env.example` to see every option, such as model lists, the port and Whisper settings). Values saved in the app take priority over `.env`.
 
+## How the analysis works
+
+When you share a video, HookLab runs a step-by-step analysis (built with [LangGraph](https://github.com/langchain-ai/langgraphjs)) using the model you picked:
+
+1. **Evidence log:** a factual, frame-by-frame record of what's on screen and what's said, so every later step works from the same facts.
+2. **Five specialists, in parallel:** the hook and 3-second skip rate; a line-by-line script breakdown with open loops and retention; the share engine and post breakdown; how the algorithm will classify it and which niche it reaches; and the craft (visuals, delivery, editing).
+3. **Write-up:** the breakdown you see, built from those notes.
+4. **Fact-check:** checks every quote, timestamp and number against the evidence, and sends the write-up back for one revision if needed.
+
+Each step's full notes are under **Step-by-step analysis** below the breakdown. Follow-up questions are answered in a single call.
+
+A deep analysis makes about 8–10 model calls, so it costs more and takes longer than a single answer, especially with local models. For one call per video, set `ANALYSIS=quick` in `.env`.
+
 ## Links (yt-dlp)
 
 HookLab uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) to download TikTok and Instagram links. If it isn't already installed, HookLab downloads the official build into `bin/` the first time it starts, checks it against yt-dlp's published checksums, and keeps it up to date. If you already have yt-dlp (for example from Homebrew), HookLab uses yours.
@@ -119,7 +132,7 @@ npm run dev        # server + React app with hot reload on http://localhost:8787
 npm run typecheck
 ```
 
-- `server/`: Express API, video ingestion (`ingest.ts`), transcription (`transcribe.ts`), LLM adapters (`providers.ts`), prompts (`prompts.ts`), JSON file storage (`store.ts`), settings and Ollama setup (`settings.ts`), yt-dlp install (`tools.ts`)
+- `server/`: Express API, video ingestion (`ingest.ts`), transcription (`transcribe.ts`), LLM adapters (`providers.ts`), prompts (`prompts.ts`), the analysis graph and its frameworks (`analysis/`), JSON file storage (`store.ts`), settings and Ollama setup (`settings.ts`), yt-dlp install (`tools.ts`)
 - `client/`: React + TypeScript app (Vite)
 
 ## License and terms

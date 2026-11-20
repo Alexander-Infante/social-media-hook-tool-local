@@ -320,3 +320,10 @@ label.checkbox input { width: auto; }
 .progress > div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.4s ease; }
 .form.groq { margin-top: 0.75rem; gap: 0.25rem; }
 details summary { cursor: pointer; }
+
+/* ---- deep analysis steps ---- */
+.analysis-steps { margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 0.6rem; }
+.analysis-steps > summary { cursor: pointer; }
+.analysis-step { margin: 0.5rem 0 0 0.75rem; }
+.analysis-step > summary { cursor: pointer; font-weight: 600; }
+.analysis-step .markdown { margin-top: 0.5rem; padding: 0.75rem 1rem; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; }

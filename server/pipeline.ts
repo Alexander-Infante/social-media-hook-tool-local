@@ -3,17 +3,19 @@
  * Runs in the background inside the server process; the browser polls the chat for progress.
  */
 import { createHash } from 'node:crypto';
-import { access, mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { apiKeyFor, defaultConnector, getConnector } from './config';
+import { runDeepAnalysis } from './analysis/graph';
+import { analysisMode, apiKeyFor, defaultConnector, getConnector } from './config';
+import { frameParts } from './frames';
 import { detectContainer, downloadFromUrl, extractFrames, frameTimes, probe, sceneCuts } from './ingest';
 import { DEFAULT_VIDEO_ASK, SYSTEM_PROMPT, dossier } from './prompts';
 import { UserFacingError, chat, type Part, type Turn } from './providers';
 import { videoSources, type VideoSource } from './sources';
 import * as store from './store';
 import { transcribe } from './transcribe';
-import type { Connector, Message, Video, VideoMeta } from './types';
+import type { AnalysisStep, Connector, Message, Video, VideoMeta } from './types';
 
 /** Sends a tiny request to check the model works. Pass apiKey to check a key before it's saved. */
 export async function testConnector(c: Connector, apiKey = apiKeyFor(c)) {
@@ -74,13 +76,26 @@ export async function runTurn(chatId: string, messageId: string) {
       if (parts.length) turns.push({ role: m.role, parts });
     }
 
-    // 3. Ask the LLM.
-    await progress(`Analyzing with ${connector.label} · ${connector.model}`);
-    const reply = await chat(connector, apiKeyFor(connector), SYSTEM_PROMPT, turns);
+    // 3. Ask the LLM. A newly shared video gets the step-by-step analysis graph; follow-ups are one call.
+    let reply: string;
+    let steps: AnalysisStep[] | undefined;
+    if (newVideoIds.length && analysisMode() === 'deep') {
+      ({ reply, steps } = await runDeepAnalysis({
+        connector,
+        apiKey: apiKeyFor(connector),
+        videos: newVideoIds.map((id) => videos.get(id)).filter((v): v is Video => Boolean(v)),
+        ask: userMsg.content.trim() || DEFAULT_VIDEO_ASK,
+        context: conversationSoFar(history.slice(0, -1)),
+        progress,
+      }));
+    } else {
+      await progress(`Analyzing with ${connector.label} · ${connector.model}`);
+      reply = await chat(connector, apiKeyFor(connector), SYSTEM_PROMPT, turns);
+    }
 
     await store.updateChat(chatId, ({ chat: c, messages: msgs }) => {
       const msg = msgs.find((m) => m.id === messageId);
-      if (msg) Object.assign(msg, { status: 'done', content: reply, progress: undefined, connectorLabel: `${connector.label} · ${connector.model}` });
+      if (msg) Object.assign(msg, { status: 'done', content: reply, steps, progress: undefined, connectorLabel: `${connector.label} · ${connector.model}` });
       c.updatedAt = store.nowMs();
       if (c.title === 'New chat') c.title = titleFor(userMsg, videos);
     });
@@ -103,18 +118,14 @@ function titleFor(msg: Message, videos: Map<string, Video>): string {
   return (clean || 'Video breakdown').slice(0, 70);
 }
 
-async function frameParts(video: Video): Promise<Part[]> {
-  const parts = await Promise.all(
-    video.frames.map(async (f): Promise<Part | undefined> => {
-      try {
-        const data = await readFile(join(store.framesDir(video.id), f.file));
-        return { type: 'image', data, label: `Frame at ${f.t.toFixed(1)}s:` };
-      } catch {
-        return undefined;
-      }
-    }),
-  );
-  return parts.filter((p): p is Part => Boolean(p));
+/** The last few messages as plain text, so the final write-up knows what the creator already said (their niche, goals). */
+function conversationSoFar(history: Message[]): string | undefined {
+  const text = history
+    .slice(-6)
+    .map((m) => `${m.role === 'user' ? 'Creator' : 'HookLab'}: ${m.content.trim().slice(0, 1500)}`)
+    .filter((line) => !line.endsWith(': '))
+    .join('\n\n');
+  return text || undefined;
 }
 
 /** Returns the processed video, reusing a previous result for the same URL or upload. */
